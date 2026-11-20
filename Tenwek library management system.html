@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tenwek High - Library Management System</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif}
+body{background:#eef2f7}
+header{background:#0b3d2e;color:white;padding:20px;text-align:center}
+header h1{font-size:26px} header p{opacity:.8;font-size:14px}
+.container{max-width:1000px;margin:20px auto;padding:0 15px}
+.card{background:white;padding:20px;border-radius:14px;box-shadow:0 3px 10px rgba(0,0,0,.1);margin-bottom:20px}
+h2{margin-bottom:12px;color:#0b3d2e} h3{margin:15px 0 8px}
+input,select{width:100%;padding:11px;margin:6px 0;border:1px solid #ddd;border-radius:9px}
+button{padding:11px 16px;border:none;border-radius:9px;cursor:pointer;font-weight:bold;background:#0b3d2e;color:white;margin:5px 3px}
+button.green{background:#0b3d2e} button.orange{background:#f57c00} button.red{background:#d32f2f} button.grey{background:#eee;color:#333}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:15px}
+.tabs button{background:white;color:#333;box-shadow:0 2px 5px rgba(0,0,0,.08)}
+.tabs button.active{background:#0b3d2e;color:white}
+table{width:100%;border-collapse:collapse;margin-top:10px;font-size:14px}
+th,td{padding:10px;border-bottom:1px solid #eee;text-align:left}
+th{background:#f7f7f7}
+.badge{padding:4px 10px;border-radius:20px;font-size:12px;font-weight:bold}
+.available{background:#d4edda} .borrowed{background:#ffe0b2}
+.hidden{display:none}
+.top{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+.stat{display:flex;gap:15px;flex-wrap:wrap}
+.stat div{flex:1;min-width:140px;background:#0b3d2e;color:white;padding:18px;border-radius:12px;text-align:center}
+.stat div b{font-size:24px;display:block}
+.search{margin:10px 0}
+</style>
+</head>
+<body>
+<header>
+<h1>📚 TENWEK HIGH SCHOOL</h1>
+<p>Library Management System</p>
+<p id="welcomeTop" style="margin-top:8px;font-weight:bold"></p>
+</header>
+
+<div class="container">
+
+<!-- LOGIN / REGISTER -->
+<div id="authPage">
+  <div class="card" style="max-width:450px;margin:auto;text-align:center">
+    <h2>Welcome to Tenwek Library</h2>
+    <p style="color:#666;margin-bottom:15px">Login as Librarian or Student</p>
+    <div class="tabs" style="justify-content:center">
+      <button id="tabLib" class="active" onclick="showTab('librarian')">Librarian Login</button>
+      <button id="tabStu" onclick="showTab('student')">Student Login</button>
+      <button id="tabReg" onclick="showTab('register')">Register New Student</button>
+    </div>
+
+    <div id="loginLibrarian">
+      <input id="libUser" placeholder="Librarian Username - try: librarian">
+      <input id="libPass" type="password" placeholder="Password - try: admin123">
+      <button onclick="loginLibrarian()" style="width:100%">Login as Librarian</button>
+      <p style="font-size:12px;color:#888;margin-top:10px">Demo: librarian / admin123</p>
+    </div>
+
+    <div id="loginStudent" class="hidden">
+      <input id="stuAdm" placeholder="Admission Number e.g. TEN/001">
+      <input id="stuPass" type="password" placeholder="Password">
+      <button onclick="loginStudent()" style="width:100%">Login as Student</button>
+    </div>
+
+    <div id="registerStudent" class="hidden">
+      <input id="regName" placeholder="Full Name">
+      <input id="regAdm" placeholder="Admission Number e.g. TEN/045">
+      <select id="regClass"><option>Form 1</option><option>Form 2</option><option>Form 3</option><option>Form 4</option></select>
+      <input id="regPass" type="password" placeholder="Create Password">
+      <button onclick="registerStudent()" style="width:100%;background:#f57c00">Register Student</button>
+      <p style="font-size:12px;color:#666;margin-top:8px">After registering, go to Student Login to login.</p>
+    </div>
+    <p id="authMsg" style="color:red;margin-top:10px"></p>
+  </div>
+</div>
+
+<!-- LIBRARIAN DASHBOARD -->
+<div id="librarianPage" class="hidden">
+  <div class="top"><h2>📚 Librarian Dashboard</h2><button class="red" onclick="logout()">Logout</button></div>
+  <div class="stat">
+    <div><b id="totalBooks">0</b>Total Books</div>
+    <div><b id="totalStudents">0</b>Total Students</div>
+    <div><b id="totalBorrowed">0</b>Borrowed</div>
+  </div>
+  <div class="card">
+    <h3>Add New Book</h3>
+    <input id="bookTitle" placeholder="Book Title e.g. Biology Form 2">
+    <input id="bookAuthor" placeholder="Author">
+    <input id="bookCategory" placeholder="Category e.g. Science, Maths, English">
+    <input id="bookCopies" type="number" placeholder="Copies e.g. 5">
+    <button onclick="addBook()">+ Add Book</button>
+  </div>
+  <div class="card">
+    <h3>All Books</h3>
+    <input class="search" id="searchLib" placeholder="🔍 Search book..." oninput="renderLibrarian()">
+    <div id="libBooks"></div>
+  </div>
+  <div class="card">
+    <h3>Registered Students</h3>
+    <div id="libStudents"></div>
+  </div>
+  <div class="card">
+    <h3>Borrowed Books Record</h3>
+    <div id="libBorrowed"></div>
+  </div>
+</div>
+
+<!-- STUDENT DASHBOARD -->
+<div id="studentPage" class="hidden">
+  <div class="top"><h2>👋 Student Dashboard - <span id="stuName"></span></h2><button class="red" onclick="logout()">Logout</button></div>
+  <p id="stuInfo" style="margin-bottom:15px;color:#555"></p>
+  <div class="card">
+    <h3>📖 Available Books - Click Borrow</h3>
+    <input class="search" id="searchStu" placeholder="🔍 Search book..." oninput="renderStudent()">
+    <div id="stuBooks"></div>
+  </div>
+  <div class="card">
+    <h3>📚 My Borrowed Books</h3>
+    <div id="myBooks"></div>
+  </div>
+</div>
+
+</div>
+
+<script>
+// DATA - saved in browser
+let books = JSON.parse(localStorage.getItem('tenwek_books') || '[]');
+let students = JSON.parse(localStorage.getItem('tenwek_students') || '[]');
+let borrows = JSON.parse(localStorage.getItem('tenwek_borrows') || '[]');
+let currentStudent = null;
+
+if(books.length===0){
+  books = [
+    {id:1,title:"Biology Form 2",author:"KIE",cat:"Science",copies:5},
+    {id:2,title:"Mathematics Form 3",author:"KIE",cat:"Maths",copies:3},
+    {id:3,title:"English Setbook - The River and the Source",author:"Margaret Ogola",cat:"English",copies:4},
+    {id:4,title:"Chemistry Form 1",author:"KIE",cat:"Science",copies:2},
+    {id:5,title:"History - Kenya",author:"KIE",cat:"History",copies:6},
+  ];
+  save();
+}
+function save(){
+  localStorage.setItem('tenwek_books',JSON.stringify(books));
+  localStorage.setItem('tenwek_students',JSON.stringify(students));
+  localStorage.setItem('tenwek_borrows',JSON.stringify(borrows));
+}
+function showTab(t){
+  document.getElementById('tabLib').classList.remove('active');
+  document.getElementById('tabStu').classList.remove('active');
+  document.getElementById('tabReg').classList.remove('active');
+  document.getElementById('loginLibrarian').classList.add('hidden');
+  document.getElementById('loginStudent').classList.add('hidden');
+  document.getElementById('registerStudent').classList.add('hidden');
+  if(t==='librarian'){document.getElementById('tabLib').classList.add('active');document.getElementById('loginLibrarian').classList.remove('hidden');}
+  if(t==='student'){document.getElementById('tabStu').classList.add('active');document.getElementById('loginStudent').classList.remove('hidden');}
+  if(t==='register'){document.getElementById('tabReg').classList.add('active');document.getElementById('registerStudent').classList.remove('hidden');}
+}
+function loginLibrarian(){
+  let u=document.getElementById('libUser').value.trim();
+  let p=document.getElementById('libPass').value.trim();
+  if(u==='librarian' && p==='admin123'){
+    document.getElementById('authPage').classList.add('hidden');
+    document.getElementById('librarianPage').classList.remove('hidden');
+    document.getElementById('welcomeTop').innerText="Logged in as Librarian";
+    renderLibrarian();
+  } else { document.getElementById('authMsg').innerText="Wrong librarian username or password!"; }
+}
+function registerStudent(){
+  let name=document.getElementById('regName').value.trim();
+  let adm=document.getElementById('regAdm').value.trim().toUpperCase();
+  let cls=document.getElementById('regClass').value;
+  let pass=document.getElementById('regPass').value.trim();
+  if(!name||!adm||!pass){ document.getElementById('authMsg').innerText="Fill all fields!"; return; }
+  if(students.find(s=>s.adm===adm)){ document.getElementById('authMsg').innerText="Admission number already exists!"; return; }
+  students.push({name,adm,cls,pass});
+  save();
+  document.getElementById('authMsg').style.color="green";
+  document.getElementById('authMsg').innerText="✅ Student Registered! Now login as Student with Adm: "+adm;
+  showTab('student');
+}
+function loginStudent(){
+  let adm=document.getElementById('stuAdm').value.trim().toUpperCase();
+  let pass=document.getElementById('stuPass').value.trim();
+  let s=students.find(x=>x.adm===adm && x.pass===pass);
+  if(!s){ document.getElementById('authMsg').innerText="Wrong Admission Number or Password! Register first."; return; }
+  currentStudent=s;
+  document.getElementById('authPage').classList.add('hidden');
+  document.getElementById('studentPage').classList.remove('hidden');
+  document.getElementById('welcomeTop').innerText="Welcome, "+s.name;
+  document.getElementById('stuName').innerText=s.name;
+  document.getElementById('stuInfo').innerText="Adm: "+s.adm+" | Class: "+s.cls;
+  renderStudent();
+}
+function logout(){ location.reload(); }
+function addBook(){
+  let t=document.getElementById('bookTitle').value.trim();
+  let a=document.getElementById('bookAuthor').value.trim();
+  let c=document.getElementById('bookCategory').value.trim();
+  let cp=parseInt(document.getElementById('bookCopies').value)||1;
+  if(!t){ alert("Enter book title"); return; }
+  books.push({id:Date.now(),title:t,author:a,cat:c,copies:cp});
+  save(); renderLibrarian();
+  document.getElementById('bookTitle').value="";document.getElementById('bookAuthor').value="";document.getElementById('bookCategory').value="";document.getElementById('bookCopies').value="";
+  alert("Book Added!");
+}
+function deleteBook(id){ books=books.filter(b=>b.id!==id); save(); renderLibrarian(); }
+function borrowBook(bookId){
+  let b=books.find(x=>x.id===bookId);
+  if(b.copies<=0){ alert("No copies left!"); return; }
+  if(borrows.find(x=>x.bookId===bookId && x.adm===currentStudent.adm && !x.returned)){ alert("You already borrowed this book!"); return; }
+  b.copies--; borrows.push({bookId,bookTitle:b.title,adm:currentStudent.adm,student:currentStudent.name,date:new Date().toLocaleDateString(),returned:false});
+  save(); renderStudent(); alert("Borrowed: "+b.title);
+}
+function returnBook(bookId){
+  let rec=borrows.find(x=>x.bookId===bookId && x.adm===currentStudent.adm && !x.returned);
+  if(rec){ rec.returned=true; let b=books.find(x=>x.id===bookId); if(b) b.copies++; save(); renderStudent(); }
+}
+function librarianReturn(index){ let r=borrows[index]; if(!r.returned){ r.returned=true; let b=books.find(x=>x.id===r.bookId); if(b) b.copies++; save(); renderLibrarian(); } }
+
+function renderLibrarian(){
+  let q=(document.getElementById('searchLib').value||"").toLowerCase();
+  document.getElementById('totalBooks').innerText=books.length;
+  document.getElementById('totalStudents').innerText=students.length;
+  document.getElementById('totalBorrowed').innerText=borrows.filter(b=>!b.returned).length;
+  let filtered=books.filter(b=>b.title.toLowerCase().includes(q));
+  document.getElementById('libBooks').innerHTML = filtered.length? `<table><tr><th>Title</th><th>Author</th><th>Category</th><th>Copies</th><th>Action</th></tr>${filtered.map(b=>`<tr><td>${b.title}</td><td>${b.author}</td><td>${b.cat}</td><td>${b.copies}</td><td><button class="red" onclick="deleteBook(${b.id})">Delete</button></td></tr>`).join('')}</table>` : "No books found";
+  document.getElementById('libStudents').innerHTML = students.length? `<table><tr><th>Name</th><th>Adm No</th><th>Class</th></tr>${students.map(s=>`<tr><td>${s.name}</td><td>${s.adm}</td><td>${s.cls}</td></tr>`).join('')}</table>` : "No students yet. Register one.";
+  document.getElementById('libBorrowed').innerHTML = borrows.length? `<table><tr><th>Book</th><th>Student</th><th>Adm</th><th>Date</th><th>Status</th></tr>${borrows.map((r,i)=>`<tr><td>${r.bookTitle}</td><td>${r.student}</td><td>${r.adm}</td><td>${r.date}</td><td>${r.returned?'<span class="badge available">Returned</span>':'<span class="badge borrowed">Borrowed</span> <button onclick="librarianReturn(${i})">Mark Returned</button>'}</td></tr>`).join('')}</table>` : "No borrow records yet.";
+}
+function renderStudent(){
+  let q=(document.getElementById('searchStu').value||"").toLowerCase();
+  let filtered=books.filter(b=>b.title.toLowerCase().includes(q));
+  document.getElementById('stuBooks').innerHTML = filtered.length? `<table><tr><th>Title</th><th>Author</th><th>Category</th><th>Copies</th><th>Action</th></tr>${filtered.map(b=>`<tr><td>${b.title}</td><td>${b.author}</td><td>${b.cat}</td><td>${b.copies}</td><td><button ${b.copies<=0?'disabled style="opacity:.5"':''} onclick="borrowBook(${b.id})">Borrow</button></td></tr>`).join('')}</table>` : "No books found";
+  let mine=borrows.filter(b=>b.adm===currentStudent.adm && !b.returned);
+  document.getElementById('myBooks').innerHTML = mine.length? `<table><tr><th>Book</th><th>Date Borrowed</th><th>Action</th></tr>${mine.map(m=>`<tr><td>${m.bookTitle}</td><td>${m.date}</td><td><button class="orange" onclick="returnBook(${m.bookId})">Return</button></td></tr>`).join('')}</table>` : "You haven't borrowed any book yet.";
+}
+</script>
+</body>
+</html>
